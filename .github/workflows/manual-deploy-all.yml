@@ -34,7 +34,7 @@ jobs:
       contents: read
     steps:
       - name: For prod deployment, only user 'wdaicellorg' can deploy and deployment can only from a release branch
-        if: ${{ inputs.targetEnv == 'prod' && !(github.actor == 'wdaicellorg' && contains(github.ref_name, 'release')) }}
+        if: ${{ inputs.targetEnv == 'prod' && !(github.actor == 'wdaicellorg' && startsWith(github.ref_name, 'release')) }}
         run: |
           echo ${{ inputs.targetEnv }} ${{ github.actor }} ${{ contains(github.ref_name, 'release') }}
           echo Only user 'wdaicellorg' can deploy to prod, and only the release branch can be deployed to prod.
