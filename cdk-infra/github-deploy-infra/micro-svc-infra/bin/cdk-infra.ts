@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import * as cdkUtil from '../lib/cdkUtil';
+import * as cdkUtil from '../../common/cdkUtil';
 import { SharedInfraStack } from '../lib/shared-infra-stack';
-import { SharedApiGatewayStack } from '../lib/shared-apigateway-infra';
 import { ServiceInfraStackProps } from '../lib/micro-svc-stacks';
-const svcStacks = require('../lib/micro-svc-stacks');
+import { MicroSvcStack } from '../lib/micro-svc-stacks';
+import {SharedSecretsStack} from "../lib/shared-secrets-stack";
 
 const accountRegionEnv = {
     account: process.env.CDK_DEFAULT_ACCOUNT,
@@ -14,25 +14,31 @@ const accountRegionEnv = {
 
 const app = new cdk.App();
 
+const sharedSecretsStack = new SharedSecretsStack(app, cdkUtil.sharedSecretsStackId, {
+    env: accountRegionEnv
+});
+
 const sharedInfraStack = new SharedInfraStack(app, cdkUtil.sharedInfraStackId, {
     env: accountRegionEnv
 });
 
 const svcProps : ServiceInfraStackProps = {
     env: accountRegionEnv,
-    vpc: sharedInfraStack.vpc,
+    vpcLink: sharedInfraStack.vpcLink,
     dnsNamespace: sharedInfraStack.dnsNamespace,
-    securityGroup: sharedInfraStack.securityGroup
+    securityGroup: sharedInfraStack.securityGroup,
+    ecsTaskRole: sharedInfraStack.ecsTaskRole,
+    sharedSecrets: sharedSecretsStack.labsysScrets,
 }
 
-const microaStack = new svcStacks.MicroaStack(
+new MicroSvcStack(
     app,
     cdkUtil.applicationName + '-microa-stack',
     svcProps,
     'microa'
 );
 
-const animalStack = new svcStacks.AnimalStack(
+new MicroSvcStack(
     app,
     cdkUtil.applicationName + '-animal-stack',
     svcProps,
@@ -40,22 +46,4 @@ const animalStack = new svcStacks.AnimalStack(
 );
 
 
-cdkUtil.cloudMapSvcArray.push({
-    micorSvcName: 'microa',
-    cloudMapSvc: microaStack.cloudMapSvc
-});
-cdkUtil.cloudMapSvcArray.push({
-    micorSvcName: 'animal',
-    cloudMapSvc: animalStack.cloudMapSvc
-});
 
-
-new SharedApiGatewayStack(
-    app,
-    cdkUtil.sharedApiGatewayStackId,
-    {
-        env: accountRegionEnv,
-        vpcLink: sharedInfraStack.vpcLink
-    },
-    cdkUtil.cloudMapSvcArray
-);

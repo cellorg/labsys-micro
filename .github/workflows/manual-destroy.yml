@@ -15,51 +15,71 @@ on:
           - t3
           - u1
           - prod
-      #microSvcName:
-      #  type: choice
-      #  description: 'microSvcName'
-      #  default: 'microa'
-      #  required: true
-      #  options:
-      #    - microa
-      #    - animal
+      keepApiGateway:
+        description: 'keepApiGateway'
+        default: true
+        required: true
+        type: boolean
+
+run-name: ${{ inputs.targetEnv }} - Destroy stacks, keepApiGateway=${{ inputs.keepApiGateway }}, branch=${{ github.head_ref || github.ref_name }}
 
 jobs:
   destroyAllStacks:
     name: manual destroy
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
+      - name: For prod deployment, only user 'wdaicellorg' can deploy and deployment can only from a release branch
+        if: ${{ inputs.targetEnv == 'prod' && !(github.actor == 'wdaicellorg' && startsWith(github.ref_name, 'release')) }}
+        run: |
+          echo Only user 'wdaicellorg' can deploy to prod, and only the release branch can be deployed to prod.
+          exit 1
       - uses: actions/checkout@v3
-      - name: Configure AWS Credentials - d1
-        if: ${{ inputs.targetEnv == 'd1' }}
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.WENDYADMIN_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.WENDYADMIN_SECRET_KEY }}
-          aws-region: 'us-east-1'
-      - name: Configure AWS Credentials - d2
-        if: ${{ inputs.targetEnv == 'd2' }}
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.D2_ACCESS_KEY }}
-          aws-secret-access-key: ${{ secrets.D2_SECRET_KEY }}
-          aws-region: 'us-east-1'
       - name: Setup Node.js environment
         uses: actions/setup-node@v3.4.1
         with:
           node-version: "16"
-      - name: Install AWS CDK
-        run: 'sudo npm install -g aws-cdk'
-      - name: Destroy AWS resources
+      - name: get role ARN of role-to-assume based on targetEnv
         run: |
-          cd cdk-infra
+          cd cdk-infra/admin-init-infra
+          githubOidcRoleArn=$(node getGithubOidcRoleArn.js ${{ inputs.targetEnv }})
+          echo githubOidcRoleArn=${githubOidcRoleArn} >> $GITHUB_ENV
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          role-to-assume: ${{ env.githubOidcRoleArn }}
+          aws-region: 'us-east-1'
+      - name: Install AWS CDK
+        run: sudo npm install -g aws-cdk
+      - name: Destroy AWS resources - microServices, infra and vpc
+        run: |
+          cd cdk-infra/github-deploy-infra/common
           npm install
           npm run build
-          cdk bootstrap
+          
+          cd ../micro-svc-infra
+          npm install
+          npm run build
           cdk destroy --all --force
-        env:
-          targetEnv: ${{ inputs.targetEnv }}
-          #microSvcName: ${{ inputs. microSvcName }}
+          
+          cd ../shared-vpc-infra
+          npm install
+          npm run build
+          cdk destroy labsys-sharedVpc-stack --force
+      - name: Destroy AWS resources - API Gateway
+        if: ${{ ! inputs.keepApiGateway }}
+        run:  |
+          cd cdk-infra/github-deploy-infra/common
+          npm install
+          npm run build
+          
+          cd ../shared-api-gw-infra
+          npm install
+          npm run build
+          cdk destroy labsys-sharedApiGateway-stack --force
+
 
           
 

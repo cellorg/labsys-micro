@@ -8,19 +8,20 @@ name: auto compile
 on:
   push:
     branches:
-      - dev
+      - 'LSP-**'
     paths:
       - 'microservices/microa/**'
       - 'microservices/animal/**'
   pull_request:
     branches:
       - dev
+      - 'release-**'
     paths:
       - 'microservices/microa/**'
       - 'microservices/animal/**'
 
 jobs:
-  build:
+  compile:
 
     runs-on: ubuntu-latest
 
