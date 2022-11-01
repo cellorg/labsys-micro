@@ -22,8 +22,9 @@ public class DemoController {
     public String helloWorld() {
         System.out.println("/hello invoked - System.out.println");
         logger.info("/hello invoked - logging");
-        return "Hello from MicorA service! >>>>>>\n parameter dbUrl=" + dbUrl
-                + "\npdpOwnerUsername=" + pdpOwnerUsername
-                + "\npdpOwnerPassword=" + pdpOwnerPassword;
+        return "<html><body>Hello from MicorA service! >>>>>> <br> parameter dbUrl=" + dbUrl
+                + "<br> pdpOwnerUsername=" + pdpOwnerUsername
+                + "<br> pdpOwnerPassword=" + pdpOwnerPassword
+                + "</body></html>;
     }
 }
