@@ -25,6 +25,6 @@ public class DemoController {
         return "<html><body>Hello from MicorA service! >>>>>> <br> parameter dbUrl=" + dbUrl
                 + "<br> pdpOwnerUsername=" + pdpOwnerUsername
                 + "<br> pdpOwnerPassword=" + pdpOwnerPassword
-                + "</body></html>;
+                + "</body></html>";
     }
 }
