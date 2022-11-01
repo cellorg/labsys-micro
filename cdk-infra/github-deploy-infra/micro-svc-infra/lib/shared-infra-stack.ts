@@ -39,8 +39,8 @@ export class SharedInfraStack extends cdk.Stack {
     this.securityGroup.connections.allowFromAnyIpv4(aws_ec2.Port.tcp(8080));
     cdkUtil.tagItem(this.securityGroup, cdkUtil.securityGroupId);
 
-    this.ecsTaskRole = new aws_iam.Role(this, 'labsys-BackendECSTaskRole', {
-      roleName: 'labsys-BackendECSTaskRole',
+    this.ecsTaskRole = new aws_iam.Role(this, cdkUtil.escTaskRole, {
+      roleName: cdkUtil.escTaskRole,
       assumedBy: new aws_iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
       managedPolicies: [
         aws_iam.ManagedPolicy.fromAwsManagedPolicyName(

@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import 'source-map-support/register';
 import * as cdk from 'aws-cdk-lib';
-import * as cdkUtil from '../../common/cdkUtil';
 import {SharedVpcStack} from "../lib/shared-vpc-stack";
 
 const accountRegionEnv = {
@@ -11,6 +10,6 @@ const accountRegionEnv = {
 
 const app = new cdk.App();
 
-new SharedVpcStack(app, cdkUtil.sharedVpcStackId, {
+new SharedVpcStack(app, 'labsys-vpc-stack', {
     env: accountRegionEnv,
 });

@@ -19,8 +19,8 @@ export class SharedApiGatewayStack extends cdk.Stack {
         });
 
         // print out the endpoint after the cdk deploy
-        new cdk.CfnOutput(this, 'exportedApiGatewayEndpoint', {
-            exportName: 'exportedApiGatewayEndpoint',
+        new cdk.CfnOutput(this, cdkUtil.exportedApiGatewayEndpoint, {
+            exportName: cdkUtil.exportedApiGatewayEndpoint,
             value: apiGateway.apiEndpoint,
         });
     }

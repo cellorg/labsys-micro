@@ -16,7 +16,7 @@ export class CdkInitOidcStack extends cdk.Stack {
         githubProvider.openIdConnectProviderArn,
         {
           "StringLike": {
-            "token.actions.githubusercontent.com:sub": "repo:cellorg/labsys:*"
+            "token.actions.githubusercontent.com:sub": "repo:cellorg/*:*"
           }
         }
     );

@@ -1,23 +1,31 @@
 import * as cdk from 'aws-cdk-lib';
-import {RetentionDays} from "aws-cdk-lib/aws-logs";
+import { RetentionDays } from 'aws-cdk-lib/aws-logs';
 
 // input parameters
 const targetEnv = process.env.targetEnv || 'd1';
-export const maxAzs = Number(process.env.maxAzs || '1');
 export const fargateSvcDesiredCount = Number(process.env.fargateSvcDesiredCount || '1');
 
-export const applicationName = 'labsys';
-export const sharedVpcStackId =  applicationName + '-sharedVpc-stack';
-export const vpcId = applicationName + '-vpc';
+// It is preferred that we deploy all non-prod environments, such as d1, d2, t3, etc., in the same AWS account.
+// By sharing the vpc, nat gateways, transit gateway, etc., it may cost less than having each environment in different account.
+// Infrastructure team is responsible for creating the vpc. It is outside our github deployment.
+export let vpcId = 'labsys-vpc'; // this should match to the existing vpc that the infrastructure team created.
+
+// with the targetEnv, we can uniquely identify the resources for different environments.
+export const applicationName = 'labsys-' + targetEnv;
 export const sharedApiGatewayStackId =  applicationName + '-sharedApiGateway-stack';
 export const apiGatewayId = applicationName + '-apiGateway';
 export const exportedApiGatewayId = applicationName + '-apiGatewayId-export';
+export const exportedApiGatewayEndpoint = applicationName + '-apiGatewayEndpoint-export';
 export const sharedInfraStackId = applicationName + '-sharedInfra-stack';
 export const sharedSecretsStackId = applicationName + '-sharedSecrets-stack';
-
-export const vpcLinkId = applicationName + '-vpclink';
 export const cloudMapDnsNamespaceId = applicationName + '-dnsNamespace';
 export const securityGroupId = applicationName + '-securityGroup';
+export const escTaskRole = applicationName + '-backendECSTaskRole';
+export const vpcLinkId = applicationName + '-vpclink';
+
+// Secrets Manager - secrets IDs
+export const pdpOwnerPasswordId = targetEnv + '_PDP_OWNER_PASSWORD';
+
 export let awsSvcLogRetentionDays = RetentionDays.ONE_DAY;
 let tagEnvironment = process.env.Environment || 'nonprod';
 
@@ -36,6 +44,7 @@ switch (targetEnv) {
         break;
     case 'prod':
         tagEnvironment = 'prod';
+        vpcId = 'labsys-vpc'; // overwrite the existing vpc name if it differs from the nonprod
         PDP_OWNER_JDBC_URL = 'fake:jdbc:url:prod';
         break;
 }
